@@ -42,3 +42,4 @@ out/
 # Ignore personal files
 *.secret
 dataset/
+test*

@@ -1,34 +1,36 @@
+import librosa
+import skimage.io
 import numpy as np
-from scipy import signal
-from scipy.io import wavfile
-from scipy.ndimage import zoom
+import cv2
+def scale_minmax(X, min=0.0, max=1.0):
+    X_std = (X - X.min()) / (X.max() - X.min())
+    X_scaled = X_std * (max - min) + min
+    return X_scaled
+def create_spectrogram(audio_path, output_path, target_size=(256, 256)):
+    # Load an audio file
+    y, sr = librosa.load(audio_path, sr=None)  
 
-def create_spectrogram_data(input_wav_path, size=(300, 300)):
-    """
-    Generates a normalized spectrogram data matrix of fixed dimensions without any graphics.
+    # Parameters for Mel spectrogram
+    n_fft = 1024       
+    hop_length = 512    
+    n_mels = 128       
+    fmin = 20          
+    fmax = sr // 2     
 
-    Args:
-        input_wav_path (str): Path to the input WAV file.
-        size (tuple): Desired (height, width) of the output matrix.
+    # Generate Mel spectrogram
+    S = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=n_fft, hop_length=hop_length, 
+                                       n_mels=n_mels, fmin=fmin, fmax=fmax)
+    S = np.log(S + 1e-9)  # Convert to log scale (avoid log(0) errors)
 
-    Returns:
-        np.ndarray: 2D array of shape `size` containing spectrogram values normalized to [0, 1].
-    """
-    # Read audio file
-    sample_rate, samples = wavfile.read(input_wav_path)
-    # If stereo, take the first channel
-    if samples.ndim > 1:
-        samples = samples[:, 0]
+    # Normalize and invert spectrogram
+    S = scale_minmax(S, 0, 255).astype(np.uint8)
+    S = np.flip(S, axis=0)  # Put low frequencies at the bottom
+    S = 255 - S  # Invert: Black = More Energy
 
-    # Compute spectrogram
-    frequencies, times, Sxx = signal.spectrogram(samples, fs=sample_rate)
-    # Convert to dB scale and normalize
-    Sxx_db = 10 * np.log10(Sxx + 1e-10)
-    Sxx_norm = (Sxx_db - Sxx_db.min()) / (Sxx_db.max() - Sxx_db.min())
+    # Convert to 3-channel grayscale image (for CNN compatibility)
+    S = cv2.merge([S, S, S])
 
-    # Resize to desired dimensions
-    original_shape = Sxx_norm.shape
-    zoom_factors = (size[0] / original_shape[0], size[1] / original_shape[1])
-    Sxx_resized = zoom(Sxx_norm, zoom_factors, order=1)
+    S_resized = cv2.resize(S, [256, 256], interpolation=cv2.INTER_AREA)  # Resize
 
-    return Sxx_resized
+    # Save as PNG
+    skimage.io.imsave(output_path, S_resized)
