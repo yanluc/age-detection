@@ -1,12 +1,11 @@
 import librosa
-import skimage.io
 import numpy as np
 import cv2
 def scale_minmax(X, min=0.0, max=1.0):
     X_std = (X - X.min()) / (X.max() - X.min())
     X_scaled = X_std * (max - min) + min
     return X_scaled
-def create_spectrogram(audio_path, output_path, target_size=(256, 256)):
+def create_spectrogram(audio_path, target_size=(256, 256)):
     # Load an audio file
     y, sr = librosa.load(audio_path, sr=None)  
 
@@ -30,7 +29,6 @@ def create_spectrogram(audio_path, output_path, target_size=(256, 256)):
     # Convert to 3-channel grayscale image (for CNN compatibility)
     S = cv2.merge([S, S, S])
 
-    S_resized = cv2.resize(S, [256, 256], interpolation=cv2.INTER_AREA)  # Resize
+    S_resized = cv2.resize(S, target_size, interpolation=cv2.INTER_AREA)  # Resize
 
-    # Save as PNG
-    skimage.io.imsave(output_path, S_resized)
+    return S_resized
