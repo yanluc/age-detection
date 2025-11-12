@@ -41,3 +41,8 @@ out/
 
 # Ignore personal files
 *.secret
+
+data/
+*.python-version
+uv.lock
+*.parquet
