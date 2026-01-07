@@ -1,0 +1,6 @@
+pyserial==3.5
+scikit-learn==1.8.0
+torch==2.11.0.dev20251225+rocm7.1
+torchvision==0.25.0.dev20251226+rocm7.1
+tqdm==4.67.1
+opencv-python
