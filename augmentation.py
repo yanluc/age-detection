@@ -19,14 +19,14 @@ def random_augment(samples: np.ndarray, sample_rate: int):
     ])
     return augment(samples=samples, sample_rate=sample_rate)
 
+if __name__ == "__main__":
+    input_path = ""
+    samples, sample_rate = librosa.load(input_path, sr=None)
 
-input_path = ""
-samples, sample_rate = librosa.load(input_path, sr=None)
+    augmented_samples = random_augment(samples, sample_rate)
 
-augmented_samples = random_augment(samples, sample_rate)
-
-output_path = ""
-sf.write(output_path, augmented_samples, sample_rate)
+    output_path = ""
+    sf.write(output_path, augmented_samples, sample_rate)
 
 
 
